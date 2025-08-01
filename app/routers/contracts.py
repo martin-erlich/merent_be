@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from .. import crud, schemas, database
 
@@ -11,4 +11,7 @@ def read_contracts(property_id: int, skip: int = 0, limit: int = 100, db: Sessio
 
 @router.post("/", response_model=schemas.Contract)
 def create_contract(contract: schemas.ContractCreate, db: Session = Depends(database.get_db)):
-    return crud.create_contract(db, contract)
+    try:
+        return crud.create_contract(db, contract)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

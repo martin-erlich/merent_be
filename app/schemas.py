@@ -1,5 +1,21 @@
-from datetime import date
+from datetime import date, datetime
 from pydantic import BaseModel
+from typing import Optional, List
+
+class UserBase(BaseModel):
+    name: str
+    last_name: str
+    phone: Optional[str] = None
+    email: str
+
+class UserCreate(UserBase):
+    pass
+
+class User(UserBase):
+    id: int
+
+    class Config:
+        orm_mode = True
 
 class PropertyBase(BaseModel):
     address: str
@@ -12,18 +28,21 @@ class PropertyBase(BaseModel):
     estimated_value: float
 
 class PropertyCreate(PropertyBase):
-    pass
+    owner_ids: List[int] = []
 
 class Property(PropertyBase):
     id: int
+    owners: List[User] = []
 
     class Config:
         orm_mode = True
 
 class ContractBase(BaseModel):
     property_id: int
-    tenant_name: str
+    landlord_id: int
+    tenant_id: int
     monthly_rent: float
+    deposit: float
     start_date: date
     end_date: date
     include_taxes: bool
@@ -35,6 +54,9 @@ class ContractCreate(ContractBase):
 
 class Contract(ContractBase):
     id: int
+    property: Property
+    landlord: User
+    tenant: User
 
     class Config:
         orm_mode = True
@@ -43,6 +65,8 @@ class PaymentBase(BaseModel):
     contract_id: int
     amount: float
     date: date
+    due_date: datetime
+    paid_at: Optional[datetime] = None
     method: str
     reference: str
     receipt_filename: str
