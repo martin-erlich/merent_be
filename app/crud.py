@@ -118,6 +118,28 @@ def create_contract(db: Session, contract: schemas.ContractCreate):
 def get_payments_for_contract(db: Session, contract_id: int, skip: int = 0, limit: int = 100):
     return db.query(models.Payment).filter(models.Payment.contract_id == contract_id).offset(skip).limit(limit).all()
 
+def get_payment(db: Session, payment_id: int):
+    return db.query(models.Payment).filter(models.Payment.id == payment_id).first()
+
+def update_payment_status(db: Session, payment_id: int, status: str, paid_at: datetime = None, receipt_filename: str = None):
+    """Update payment status, paid_at timestamp, and receipt_filename"""
+    payment = db.query(models.Payment).filter(models.Payment.id == payment_id).first()
+    if not payment:
+        return None
+    
+    payment.status = status
+    if paid_at:
+        payment.paid_at = paid_at
+    elif status == "paid" and not payment.paid_at:
+        payment.paid_at = datetime.now()
+    
+    if receipt_filename:
+        payment.receipt_filename = receipt_filename
+    
+    db.commit()
+    db.refresh(payment)
+    return payment
+
 def create_payment(db: Session, payment: schemas.PaymentCreate):
     db_payment = models.Payment(**payment.dict())
     db.add(db_payment)
